@@ -47,14 +47,14 @@ void * thread_manager_function(void * arg)
     if ((sock_fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) 
     {
         perror("socket");
-        return EXIT_FAILURE;
+        pthread_exit(0);
     }
 
     /* Find server address */
     if ((rem = gethostbyname(IP)) == NULL) 
     {
         herror("gethostbyname");
-        return EXIT_FAILURE;
+        pthread_exit(0);
     }
 
     int port = atoi(PORT); /*Convert port number to integer*/
@@ -67,13 +67,13 @@ void * thread_manager_function(void * arg)
     if (connect(sock_fd, serverptr, sizeof (server)) < 0) 
     {
         herror("connect");
-        return EXIT_FAILURE;
+        pthread_exit(0);
     }
 
     printf("Connecting to '%s' port '%s' \n", IP, PORT);
 
     //      Step 3: send "LIST UNIQUEID DELAY"
-    sprintf(buf_SIZE, "LIST %s %s", UNIQUE_ID, DELAY);
+    sprintf(messageBuf, "LIST %s %s", UNIQUE_ID, DELAY);
 
     write(sock_fd, messageBuf, buf_SIZE);
 
@@ -100,8 +100,7 @@ void * thread_manager_function(void * arg)
     }
 
     close(sock_fd);
-
-    return EXIT_SUCCESS;
+    pthread_exit(0);
 }
 
 
@@ -135,14 +134,14 @@ void * thread_worker_function(void * arg)
         if ((sock_fd = socket(PF_INET, SOCK_STREAM, 0)) < 0)
         {
             perror("socket");
-            return EXIT_FAILURE;
+            pthread_exit(0);
         }
 
         /* Find server address */
         if ((rem = gethostbyname(IP)) == NULL) 
         {
             herror("gethostbyname");
-            return EXIT_FAILURE;
+            pthread_exit(0);
         }
 
         int port = atoi(PORT); /*Convert port number to integer*/
@@ -155,11 +154,11 @@ void * thread_worker_function(void * arg)
         if (connect(sock_fd, serverptr, sizeof (server)) < 0) 
         {
             herror("connect");
-            return EXIT_FAILURE;
+            pthread_exit(0);
         }
 
         // Step 3: send "FETCH ID REMOTEFILEPATH"
-        sprintf(buf_SIZE, "FETCH %s %s", UNIQUE_ID, REMOTEPATH);
+        sprintf(messageBuf, "FETCH %s %s", UNIQUE_ID, REMOTEPATH);
 
         write(sock_fd, messageBuf, buf_SIZE);
         
