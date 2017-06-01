@@ -21,9 +21,9 @@
 
 int main(int argc, char const *argv[]) 
 {
-    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, server_port;
+    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, server_port, DELAY;
 
-    char *d = "-d", *p = "-p", *path, *split, *dirorfile, copyBuf[buf_SIZE], message[buf_SIZE], buf[buf_SIZE],
+    char *d = "-d", *p = "-p", *path, *split, *dirorfile, *UNIQUE_ID, copyBuf[buf_SIZE], message[buf_SIZE], buf[buf_SIZE],
     	messageFromClient[buf_SIZE], messageToClient[buf_SIZE], dirName[buf_SIZE], buf_reply[3], buf_OK[] = "OK", buf_PRINTEND[] = "PRINTEND", buf_DONE[] = "DONE";
 
 
@@ -52,7 +52,7 @@ int main(int argc, char const *argv[])
                 if (c == 1)
                     free(dirorfile);
 
-                printf("(mirror server) acceptable flags: -p -m -w \n");
+                printf("(content_server) acceptable flags: -p -m -w \n");
                 exit(1);
             }
         }
@@ -106,18 +106,34 @@ int main(int argc, char const *argv[])
         } 
         else 
         {
-            if ((bytesRead = read(client_sock, buf, buf_SIZE)) > 0)
+            if ((bytesRead = read(client_sock, messageFromClient, buf_SIZE)) > 0)
             {
-                // check if buf is "LIST"
-                if(strcmp(buf, "LIST") == 0)
+            	printf("(content_server) message from mirror manager received: '%s'\n", messageFromClient);
+
+            	char *tempptr = NULL;
+
+                split = strtok_r(messageFromClient, " ", &tempptr);
+
+                // check if messageFromClient is "LIST"
+                if(strcmp(split, "LIST") == 0)
             	{
+            		write(client_sock, "got your message mate", buf_SIZE);
+
+            		split = strtok_r(NULL, " ", &tempptr);
+
+            		UNIQUE_ID = malloc( (strlen(split)+1) * sizeof(char) );
+            		strcpy(UNIQUE_ID, split);
+
+            		split = strtok_r(NULL, " ", &tempptr);
+            		
+            		DELAY = atoi(split);
 	                // if LIST:
 	                //      1. open directory
 	                //      2. traverse tree
 	                //      3. for each record, write entry to socket (morewithls)
                 }
-                 // check if buf is "FETCH"
-                else if(strcmp(buf, "FETCH") == 0)
+                 // check if messageFromClient is "FETCH"
+                else if(strcmp(split, "FETCH") == 0)
                 {
 	                // if fetch:
 	                //      1. open file

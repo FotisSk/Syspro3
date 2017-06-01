@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
         return EXIT_FAILURE;
     }
 
-    printf("Connecting to %s port %d\n", argv[1], port);
+    printf("Connecting to IP: %s - PORT: %d\n", argv[2], port);
 
     // ------------------------------------------------
 
@@ -129,6 +129,7 @@ int main(int argc, char const *argv[])
 
     free(server_address);
     free(server_port);
+    free(jobs);
 
     return EXIT_SUCCESS;
 }

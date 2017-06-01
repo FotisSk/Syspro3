@@ -26,6 +26,11 @@ typedef struct QueueEntry
 	char *UNIQUE_ID;
 } QueueEntry;
 
+typedef struct ManagerInfo
+{
+	pthread_t manager_threadid;
+}ManagerInfo;
+
 typedef struct WorkerInfo 
 {
     pthread_t worker_threadid;

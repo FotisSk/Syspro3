@@ -23,22 +23,51 @@
 
 void * thread_manager_function(void * arg) 
 { // arg: "IP:PORT:USERFILE:DELAY"
+	char *split, *IP, *PORT, *USERFILE, *UNIQUE_ID="nothingyet";
     struct sockaddr_in server;
     struct sockaddr *serverptr = (struct sockaddr*) &server;
     struct hostent *rem;
 
-    int bytesRead;
+    int bytesRead, DELAY;
 
     char messageBuf[buf_SIZE];
     char messageFromContentServer[buf_SIZE];
 
+    memset(messageBuf, 0, buf_SIZE);
+    memset(messageFromContentServer, 0, buf_SIZE);
+
+    printf("(mirror_manager) job: %s\n", (char *)arg);
     // once:
     //      Step 1: split "arg"  (find: IP PORT USERFILE DELAY)
-    char * IP;
-    char * PORT;
-    char * USERFILE;
-    char * DELAY;
-    char * UNIQUE_ID; // autogenerate
+
+    char * tempptr = NULL;
+
+    split = strtok_r(arg, ":", &tempptr);
+
+    if(split != NULL)
+    {
+   		IP = malloc( (strlen(split)+1) * sizeof(char) );
+   		strcpy(IP, split);
+
+    	split = strtok_r(NULL, ":", &tempptr);
+
+    	PORT = malloc( (strlen(split)+1) * sizeof(char) );
+   		strcpy(PORT, split);
+
+   		split = strtok_r(NULL, ":", &tempptr);
+
+    	USERFILE = malloc( (strlen(split)+1) * sizeof(char) );
+   		strcpy(USERFILE, split);
+
+   		split = strtok_r(NULL, ":", &tempptr);
+
+    	DELAY = atoi(split);
+    }
+    else
+    {
+    	printf("(mirror_manager) no job given OR incorrect job format\n");
+    	pthread_exit(0);
+    }
 
     int sock_fd = 0;
 
@@ -70,10 +99,10 @@ void * thread_manager_function(void * arg)
         pthread_exit(0);
     }
 
-    printf("Connecting to '%s' port '%s' \n", IP, PORT);
+    printf("Connecting to IP:'%s' - PORT: '%s' \n", IP, PORT);
 
     //      Step 3: send "LIST UNIQUEID DELAY"
-    sprintf(messageBuf, "LIST %s %s", UNIQUE_ID, DELAY);
+    sprintf(messageBuf, "LIST %s %d", UNIQUE_ID, DELAY);
 
     write(sock_fd, messageBuf, buf_SIZE);
 
@@ -90,6 +119,7 @@ void * thread_manager_function(void * arg)
             } 
             else 
             {
+            	printf("(mirror_manager) message from content server received: '%s'\n", messageFromContentServer);
                 //          Step 5: filter (check if filename is in USERFILE
                 char * filepath = messageFromContentServer;
                 char * userfilepath = USERFILE;
@@ -178,13 +208,14 @@ void * thread_worker_function(void * arg)
 
 int main(int argc, char const *argv[]) 
 {
-    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, status, exit_status, poolCounter, nextAvailablePos, server_port;
+    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, numOfJobs, status, exit_status, poolCounter, nextAvailablePos, server_port;
 
-    char *w = "-w", *m = "-m", *p = "-p", *path, *split, **next;
+    char *w = "-w", *m = "-m", *p = "-p", *path, *split, *split2, **next;
     char buf[buf_SIZE], copyBuf[buf_SIZE], message[buf_SIZE], messageFromClient[buf_SIZE], 
         messageToClient[buf_SIZE], dirName[buf_SIZE], jobPath[buf_SIZE], buf_reply[3], buf_OK[] = "OK", buf_PRINTEND[] = "PRINTEND", buf_DONE[] = "DONE";
 
-    WorkerInfo *serverStorageArray;
+    ManagerInfo *managerStorageArray;
+    WorkerInfo *workerStorageArray;
     QueueEntry *queue;
     //    jobInfo *poolStorageArray;
 
@@ -226,7 +257,7 @@ int main(int argc, char const *argv[])
     }
 
     printf("port: %d, dirname: %s, threadnum: %d\n", server_port, path, maxWorkerThreadsInServer);
-    serverStorageArray = malloc(maxWorkerThreadsInServer * sizeof (WorkerInfo));
+    workerStorageArray = malloc(maxWorkerThreadsInServer * sizeof (WorkerInfo));
 
     /* OPEN Socket */
     int master_sock, client_sock;
@@ -271,7 +302,7 @@ int main(int argc, char const *argv[])
     /*
     for (i = 0; i < maxWorkerThreadsInServer; i++) 
     {
-        pthread_create(&(serverStorageArray[i].worker_threadid), NULL, thread_worker_function, NULL);
+        pthread_create(&(workerStorageArray[i].worker_threadid), NULL, thread_worker_function, NULL);
     }
     */
 
@@ -293,16 +324,38 @@ int main(int argc, char const *argv[])
             {
                 printf("(mirror_server) buf: %s\n", buf);
 
-                strcpy(copyBuf, buf);
+                // -------------------------------------------------------- //
+                numOfJobs = 0;
 
                 char * tempptr = NULL;
 
-                split = strtok_r(buf, ",", &tempptr);
+                strcpy(copyBuf, buf);
 
-                while (split != NULL) 
+                split = strtok_r(copyBuf, ",", &tempptr);
+
+                while(split != NULL)
                 {
-                    printf("(mirror_server) processing token: %s\n", split);
-                    split = strtok_r(NULL, ",", &tempptr);
+                	numOfJobs++;
+                	split = strtok_r(NULL, ",", &tempptr);
+                }
+                memset(copyBuf, 0, buf_SIZE);
+
+                managerStorageArray = malloc( numOfJobs * sizeof(ManagerInfo) );
+
+                // -------------------------------------------------------- //
+                tempptr = NULL;
+
+                split2 = strtok_r(buf, ",", &tempptr);
+
+                for(j=0; j<numOfJobs; j++) // i know i have numOfJobs jobs
+                {
+                    printf("(mirror_server) job: %s\n", split2);
+
+                    /* for each job create a mirror manager thread */
+                    pthread_create(&(managerStorageArray[j].manager_threadid), NULL, thread_manager_function, (void*)split2);
+
+                    /* go to the next job */
+                    split2 = strtok_r(NULL, ",", &tempptr);
                 }
 
                 memset(messageToClient, 0, buf_SIZE);
@@ -314,7 +367,7 @@ int main(int argc, char const *argv[])
 
     close(master_sock);
 
-    free(serverStorageArray);
+    free(workerStorageArray);
     free(queue);
 
     return EXIT_SUCCESS;
