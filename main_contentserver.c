@@ -21,16 +21,11 @@
 
 int main(int argc, char const *argv[]) 
 {
-    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, status, exit_status, jobCounter, oldSize, timeDuration, firstTime = 0,
-            poolCounter, jobID, nextAvailablePos, nextAvailablePos_pool, poolNum, tempReadFd_coord, tempWriteFd_coord, tempReadFd_pool,
-            tempWriteFd_pool, jobPID, stderrToFile, stdoutToFile, finishedJobs, jobID2, poolPos, secondsActive, jobID_pool, posInPoolStorage, thisPoolPID, server_port;
+    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, server_port;
 
-    char *w = "-w", *m = "-m", *p = "-p", *fifo_WRITE, *path, *split, *split2, *split3, **next;
-    char buf[buf_SIZE], copyBuf[buf_SIZE], copyBuf2[buf_SIZE], copyBuf_pool[buf_SIZE], message[buf_SIZE],
-            messageToCoord[buf_SIZE], messageFromPool[buf_SIZE], messageFromClient[buf_SIZE], messageFromCoord[buf_SIZE], messageToPool[buf_SIZE], messageToClient[buf_SIZE],
-            poolName_in[buf_SIZE], poolName_out[buf_SIZE], dirName[buf_SIZE], jobPath[buf_SIZE], poolBuf[buf_SIZE], buf_reply[3], buf_OK[] = "OK", buf_PRINTEND[] = "PRINTEND", buf_DONE[] = "DONE";
+    char *d = "-d", *p = "-p", *path, *split, *dirorfile, copyBuf[buf_SIZE], message[buf_SIZE], buf[buf_SIZE],
+    	messageFromClient[buf_SIZE], messageToClient[buf_SIZE], dirName[buf_SIZE], buf_reply[3], buf_OK[] = "OK", buf_PRINTEND[] = "PRINTEND", buf_DONE[] = "DONE";
 
-    memset(jobPath, 0, buf_SIZE);
 
     memset(buf, 0, buf_SIZE);
     memset(copyBuf, 0, buf_SIZE);
@@ -38,28 +33,24 @@ int main(int argc, char const *argv[])
     memset(messageFromClient, 0, buf_SIZE);
     memset(messageToClient, 0, buf_SIZE);
 
-    if (argc == 7)
-    { // to be changed
-        for (i = 1; i < 7; i = i + 2) 
+    if (argc == 5)
+    {
+        for (i = 1; i < 5; i = i + 2) 
         {
             if (strcmp(argv[i], p) == 0)
             {
                 server_port = atoi(argv[i + 1]);
             }
-            else if (strcmp(argv[i], m) == 0)
+            else if (strcmp(argv[i], d) == 0)
             {
                 c = 1;
-                path = malloc((strlen(argv[i + 1]) + 1) * sizeof (char));
-                strcpy(path, argv[i + 1]);
+                dirorfile = malloc((strlen(argv[i + 1]) + 1) * sizeof (char));
+                strcpy(dirorfile, argv[i + 1]);
             } 
-            else if (strcmp(argv[i], w) == 0)
-            {
-                maxWorkerThreadsInServer = atoi(argv[i + 1]);
-            }
             else 
             {
                 if (c == 1)
-                    free(path);
+                    free(dirorfile);
 
                 printf("(mirror server) acceptable flags: -p -m -w \n");
                 exit(1);
@@ -118,19 +109,22 @@ int main(int argc, char const *argv[])
             if ((bytesRead = read(client_sock, buf, buf_SIZE)) > 0)
             {
                 // check if buf is "LIST"
-                
-                // if LIST:
-                //      1. open directory
-                //      2. traverse tree
-                //      3. for each record, write entry to socket (morewithls)
-                
-                // check if buf is "FETCH"
-                
-                // if fetch:
-                //      1. open file
-                //      2. read file data from hdd
-                //      3. write file to socket
-                //      4. close file
+                if(strcmp(buf, "LIST") == 0)
+            	{
+	                // if LIST:
+	                //      1. open directory
+	                //      2. traverse tree
+	                //      3. for each record, write entry to socket (morewithls)
+                }
+                 // check if buf is "FETCH"
+                else if(strcmp(buf, "FETCH") == 0)
+                {
+	                // if fetch:
+	                //      1. open file
+	                //      2. read file data from hdd
+	                //      3. write file to socket
+	                //      4. close file
+                }
             }
             close(client_sock); /* parent closes socket to client */
         }

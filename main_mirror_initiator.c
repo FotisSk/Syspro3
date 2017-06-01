@@ -50,7 +50,7 @@ int main(int argc, char const *argv[])
                 if (c == 1)
                     free(jobs);
 
-                printf("(mirror_initiator) acceptable flags: -w -r [-o]\n");
+                printf("(mirror_initiator) acceptable flags: -n -p -s\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -72,12 +72,15 @@ int main(int argc, char const *argv[])
 
     port = atoi(server_port); /*Convert port number to integer*/
 
+    printf("sock_fd: %d\n", sock_fd);
+    printf("MirrorServerAddress: %s, MirrorServerPort: %d, job: %s\n", server_address, port, jobs);
+
     server.sin_family = AF_INET; /* Internet domain */
     memcpy(&server.sin_addr, rem->h_addr, rem->h_length);
     server.sin_port = htons(port); /* Server port */
 
     /* Initiate connection */
-    if (connect(sock_fd, serverptr, sizeof (server)) < 0) 
+    if (connect(sock_fd, serverptr, sizeof(server)) < 0) 
     {
         herror("connect");
         return EXIT_FAILURE;

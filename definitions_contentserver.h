@@ -1,11 +1,10 @@
 
-#ifndef DEFINITIONS_H
-#define DEFINITIONS_H
+#ifndef DEFINITIONS_CONTENTSERVER_H
+#define DEFINITIONS_CONTENTSERVER_H
 
 #define fileBuf_SIZE 1024
 #define userBuf_SIZE 1024
 #define buf_SIZE 1024
-#define PERMS 0755
 
 typedef struct jobInfo {
     int job_PID;

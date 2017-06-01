@@ -116,6 +116,7 @@ void * thread_worker_function(void * arg)
 
     char messageBuf[buf_SIZE];
     char messageFromContentServer[buf_SIZE];
+    char *split;
 
     // Loop forever:
 
@@ -177,16 +178,14 @@ void * thread_worker_function(void * arg)
 
 int main(int argc, char const *argv[]) 
 {
-    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, status, exit_status, jobCounter, oldSize, timeDuration, firstTime = 0,
-            poolCounter, jobID, nextAvailablePos, nextAvailablePos_pool, poolNum, tempReadFd_coord, tempWriteFd_coord, tempReadFd_pool,
-            tempWriteFd_pool, jobPID, stderrToFile, stdoutToFile, finishedJobs, jobID2, poolPos, secondsActive, jobID_pool, posInPoolStorage, thisPoolPID, server_port;
+    int a = 0, b = 0, c = 0, i, j, maxWorkerThreadsInServer, bytesRead, status, exit_status, poolCounter, nextAvailablePos, server_port;
 
-    char *w = "-w", *m = "-m", *p = "-p", *fifo_WRITE, *path, *split, *split2, *split3, **next;
-    char buf[buf_SIZE], copyBuf[buf_SIZE], copyBuf2[buf_SIZE], copyBuf_pool[buf_SIZE], message[buf_SIZE],
-            messageToCoord[buf_SIZE], messageFromPool[buf_SIZE], messageFromClient[buf_SIZE], messageFromCoord[buf_SIZE], messageToPool[buf_SIZE], messageToClient[buf_SIZE],
-            poolName_in[buf_SIZE], poolName_out[buf_SIZE], dirName[buf_SIZE], jobPath[buf_SIZE], poolBuf[buf_SIZE], buf_reply[3], buf_OK[] = "OK", buf_PRINTEND[] = "PRINTEND", buf_DONE[] = "DONE";
+    char *w = "-w", *m = "-m", *p = "-p", *path, *split, **next;
+    char buf[buf_SIZE], copyBuf[buf_SIZE], message[buf_SIZE], messageFromClient[buf_SIZE], 
+        messageToClient[buf_SIZE], dirName[buf_SIZE], jobPath[buf_SIZE], buf_reply[3], buf_OK[] = "OK", buf_PRINTEND[] = "PRINTEND", buf_DONE[] = "DONE";
 
     WorkerInfo *serverStorageArray;
+    QueueEntry *queue;
     //    jobInfo *poolStorageArray;
 
     memset(jobPath, 0, buf_SIZE);
@@ -226,6 +225,7 @@ int main(int argc, char const *argv[])
         }
     }
 
+    printf("port: %d, dirname: %s, threadnum: %d\n", server_port, path, maxWorkerThreadsInServer);
     serverStorageArray = malloc(maxWorkerThreadsInServer * sizeof (WorkerInfo));
 
     /* OPEN Socket */
@@ -264,14 +264,16 @@ int main(int argc, char const *argv[])
     printf("Listening for connections to port %d\n", server_port);
 
     /* CREATE QUEUE */
-
+    queue = malloc( queueSize * sizeof(QueueEntry) ); //queueSize: 100
 
 
     /* CREATE WORKER THREADS */
+    /*
     for (i = 0; i < maxWorkerThreadsInServer; i++) 
     {
         pthread_create(&(serverStorageArray[i].worker_threadid), NULL, thread_worker_function, NULL);
     }
+    */
 
 
     /* MAIN LOOP  */
@@ -313,6 +315,7 @@ int main(int argc, char const *argv[])
     close(master_sock);
 
     free(serverStorageArray);
+    free(queue);
 
     return EXIT_SUCCESS;
 }
