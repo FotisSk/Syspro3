@@ -7,22 +7,11 @@
 #define queueSize 100
 #define buf_SIZE 1024
 
-
-typedef struct jobInfo {
-    int job_PID;
-    int job_NUM;
-    int job_STATUS; //0:active, 1:finished, 3:suspended
-    int startTimeInSeconds;
-    int stop;
-    int cont;
-    int timeActive;
-} jobInfo;
-
 typedef struct QueueEntry
 {
 	char *IP;
 	char *PORT;
-	char *REMOTEPATH;
+	char *REMOTEFILEPATH;
 	char *UNIQUE_ID;
 } QueueEntry;
 
@@ -36,6 +25,17 @@ typedef struct WorkerInfo
     pthread_t worker_threadid;
 } WorkerInfo;
 
+typedef struct ThreadArg_manager
+{
+	QueueEntry *queue;
+	char *split;
+}ThreadArg_manager;
+
+typedef struct ThreadArg_worker
+{
+	QueueEntry *queue;
+	//char *split;
+}ThreadArg_worker;
 
 #endif /* DEFINITIONS_H */
 
