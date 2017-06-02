@@ -73,7 +73,7 @@ int main(int argc, char const *argv[])
     port = atoi(server_port); /*Convert port number to integer*/
 
     printf("sock_fd: %d\n", sock_fd);
-    printf("MirrorServerAddress: %s, MirrorServerPort: %d, job: %s\n", server_address, port, jobs);
+    printf("MirrorServerAddress: %s, MirrorServerPort: %d, task: %s\n", server_address, port, jobs);
 
     server.sin_family = AF_INET; /* Internet domain */
     memcpy(&server.sin_addr, rem->h_addr, rem->h_length);

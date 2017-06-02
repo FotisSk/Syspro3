@@ -42,7 +42,7 @@ void * thread_manager_function(void *arg)
 
     memset(messageBuf, 0, buf_SIZE);
     memset(messageFromContentServer, 0, buf_SIZE);
-    sleep(3);
+   // sleep(3);
     printf("(mirror_manager) job: %s\n", myArg -> split);
     // once:
     //      Step 1: split "arg"  (find: IP PORT USERFILE DELAY)
@@ -143,11 +143,15 @@ void * thread_manager_function(void *arg)
                 //mono produce 
                 pthread_mutex_lock(&mtx);
 
+                printf("(manager) entered critical section\n");
+
+                printf("placing element {%s, %s, %s, %s } in queue...\n", IP, PORT, USERFILE, UNIQUE_ID);
                 while(nextAvailablePos >= queueSize)
                 {
                 	printf(">> Queue is full \n");
                 	pthread_cond_wait(&cond_nonfull, &mtx);
                 }
+
 
                 queue = myArg -> queue;
 
@@ -168,6 +172,8 @@ void * thread_manager_function(void *arg)
                 pthread_mutex_unlock(&mtx);
 
                 pthread_cond_signal(&cond_nonempty);
+
+                usleep(300000);
             }
         }
     }
@@ -205,6 +211,8 @@ void * thread_worker_function(void *arg)
         // Step 1: consume <IP PORT REMOTEFILEPATH>
     	pthread_mutex_lock(&mtx);
 
+    	printf("(worker) entered critical section\n");
+
         while(nextAvailablePos == 0)
         {
         	printf(">> Queue is empty \n");
@@ -233,11 +241,15 @@ void * thread_worker_function(void *arg)
         free(queue[nextAvailablePos-1].UNIQUE_ID);
         queue[nextAvailablePos-1].UNIQUE_ID = NULL;
 
+        printf("obtained element {%s, %s, %s, %s }\n", IP, PORT, REMOTEPATH, UNIQUE_ID);
+
         nextAvailablePos--;
 
         pthread_mutex_unlock(&mtx);
 
         pthread_cond_signal(&cond_nonfull);
+
+        usleep(300000);
 
         // Step 2: connect to IP:PORT
         /* ________OPEN SOCKET________ */
