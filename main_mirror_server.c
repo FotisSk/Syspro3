@@ -311,8 +311,8 @@ int main(int argc, char const *argv[])
     ManagerInfo *managerStorageArray;
     WorkerInfo *workerStorageArray;
     QueueEntry *queue;
-    ThreadArg_manager *argArray_worker, *argArray_manager;
-    //    jobInfo *poolStorageArray;
+    ThreadArg_manager *argArray_manager;
+    ThreadArg_worker *argArray_worker;
 
     memset(jobPath, 0, buf_SIZE);
 
