@@ -293,8 +293,8 @@ void * thread_worker_function(void *arg)
         // Step 7: disconnect
         close(sock_fd);
     }
-
-    return EXIT_SUCCESS;
+    pthread_exit(0);
+    //return EXIT_SUCCESS;
 }
 
 
@@ -327,12 +327,14 @@ int main(int argc, char const *argv[])
     ThreadArg_worker *argArray_worker;
 
     memset(jobPath, 0, buf_SIZE);
-
     memset(buf, 0, buf_SIZE);
     memset(copyBuf, 0, buf_SIZE);
-
     memset(messageFromClient, 0, buf_SIZE);
     memset(messageToClient, 0, buf_SIZE);
+
+    pthread_mutex_init(&mtx, 0);
+    pthread_cond_init(&cond_nonempty, 0);
+    pthread_cond_init(&cond_nonfull, 0);
 
     if (argc == 7) 
     {
@@ -476,6 +478,17 @@ int main(int argc, char const *argv[])
             close(client_sock); /* parent closes socket to client */
         }
     }
+
+    for (i = 0; i < maxWorkerThreadsInServer; i++) 
+    {
+        pthread_join( workerStorageArray[i].worker_threadid, NULL);
+    }
+
+    for (i = 0; i < numOfJobs; i++) 
+    {
+        pthread_join( managerStorageArray[i].manager_threadid, NULL);
+    }
+
 
     close(master_sock);
 
